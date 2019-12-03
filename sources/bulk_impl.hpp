@@ -10,6 +10,7 @@
 #include <chrono>
 
 #include "command.hpp"
+#include "printer.hpp"
 
 // ------------------------------------------------------------------
 class reader_observer {
@@ -20,13 +21,10 @@ public:
 using reader_observer_sptr = std::shared_ptr<reader_observer>;
 using reader_observer_wptr = std::weak_ptr<reader_observer>;
 
-
 // ------------------------------------------------------------------
 class bulk_commands : public reader_observer {
 
-public:
-   using printer = std::function<void(const command_ptr&)>;
-   
+public:   
    bulk_commands(size_t bulk_size) : bulk_size_(bulk_size) {}
   ~bulk_commands() {
       if (current_command_) {
@@ -43,13 +41,15 @@ public:
       return fixed_size_cmd;
    }
 
-   void add_printer(const printer& prn) {
+   void add_printer(const printer_sptr& prn) {
       printers_.push_back(prn);
    }
 
    void out_command(const command_ptr& cmd) const {
       for(const auto& printer: printers_) {
-         printer(cmd);
+         if (!printer.expired()) {
+            printer.lock()->print(cmd);
+         }
       }
    }
 
@@ -72,7 +72,7 @@ private:
    command_ptr current_command_;
    const size_t bulk_size_;
 
-   using printers = std::list<printer>; 
+   using printers = std::list<pringer_wptr>; 
    printers printers_;
 };
 
