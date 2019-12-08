@@ -32,7 +32,7 @@ protected:
 private:
    const creation_time_point now_;
 };
-using command_ptr = std::unique_ptr<command>;
+using command_ptr = std::shared_ptr<command>;
 
 // ------------------------------------------------------------------
 class fixed_size_command  : public command {

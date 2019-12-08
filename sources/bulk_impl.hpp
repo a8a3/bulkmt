@@ -60,7 +60,7 @@ public:
 
          if(current_command_->is_full()) {
             out_command(current_command_);
-            current_command_.release();
+            current_command_ = nullptr;
          } 
 
       } else {
