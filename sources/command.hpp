@@ -8,31 +8,47 @@
 
 // ------------------------------------------------------------------
 class command {
+   friend std::ostream& operator << (std::ostream&, const command&);
+
 public:   
     static constexpr auto block_start = "{";
     static constexpr auto block_end   = "}";
 
-   command() : now_(std::chrono::system_clock::now()) {}
+   command() : creation_time_(std::chrono::system_clock::now()) {}
    virtual bool is_full() const = 0;
    virtual void add_subcommand(const std::string& subcommand) = 0;
    virtual ~command() = default;
 
    using sub_commands = std::vector<std::string>;
-   const sub_commands& get_sub_commands() const {
-      return sub_commands_;
-   }
    using creation_time_point = std::chrono::time_point<std::chrono::system_clock>;
 
    const creation_time_point& get_creation_time_point() const {
-      return now_;
+      return creation_time_;
    }
+
 protected:
    sub_commands sub_commands_;
 
 private:
-   const creation_time_point now_;
+   const creation_time_point creation_time_;
 };
 using command_ptr = std::shared_ptr<command>;
+
+// ------------------------------------------------------------------
+std::ostream& operator << (std::ostream& o, const command& cmd) {
+   const auto sub_cmds = cmd.sub_commands_;
+   std::for_each(sub_cmds.cbegin(), sub_cmds.cend(),
+      [&sub_cmds, &o, i=size_t{0}] (const auto& token) mutable {
+      o << token;
+      if (i < sub_cmds.size()) {
+         o << " ";
+         ++i;
+      }
+   });
+   o << std::endl;
+
+   return o;
+}
 
 // ------------------------------------------------------------------
 class fixed_size_command  : public command {

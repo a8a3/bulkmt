@@ -32,20 +32,6 @@ class console_printer : public printer {
     std::thread worker_;
 
     void do_print() {
-
-        const auto print_cmd = [] (const auto& cmd) {
-            const auto sub_cmds = cmd->get_sub_commands();
-            std::for_each(sub_cmds.cbegin(), sub_cmds.cend(), 
-            [&sub_cmds, i=size_t{0}] (const auto& token) mutable {
-                std::cout << token;
-                if (i < sub_cmds.size()) {
-                    std::cout << " ";
-                    ++i;
-                }
-            });
-            std::cout << std::endl;
-        };
-
         while (!stop_) {
             // std::cout << "start wait\n";
 
@@ -61,11 +47,12 @@ class console_printer : public printer {
 
             // std::cout << "commands in queue: " << cmd_queue_.size() << std::endl;
 
+            // TODO test
             std::this_thread::sleep_for(std::chrono::milliseconds(1000));
             const auto cmd = cmd_queue_.front();
             cmd_queue_.pop();
             u_lock.unlock();
-            print_cmd(cmd);
+            std::cout << *cmd;
         } // while
 
         std::lock_guard<std::mutex> lock(mutex_);
@@ -75,7 +62,7 @@ class console_printer : public printer {
             
             const auto cmd = cmd_queue_.front();
             cmd_queue_.pop();
-            print_cmd(cmd);
+            std::cout << *cmd;
         }
         
         // std::cout << "work thread " << std::this_thread::get_id() << " is stopped\n";
@@ -115,21 +102,14 @@ public:
  
     void print (const command_ptr& cmd) override 
     {
-        const auto sub_cmds = cmd->get_sub_commands();
-        const auto cmd_creation_time = std::chrono::duration_cast<std::chrono::seconds>(cmd->get_creation_time_point().time_since_epoch()); 
-
+        std::cout << "print cmd to file...\n";
+        const auto cmd_creation_time = std::chrono::duration_cast<std::chrono::seconds>(cmd->get_creation_time_point().time_since_epoch());
         const auto file_name = "bulk" + std::to_string(cmd_creation_time.count()) + ".txt";
-        std::ofstream file(file_name);
-
-        std::for_each(sub_cmds.cbegin(), sub_cmds.cend(),
-        [&sub_cmds, &file, i=size_t{0}] (const auto& token) mutable {            
-            file << token;
-            if (i < sub_cmds.size()) {
-                file << " ";
-            }
-            ++i;
-        });
-        file << std::endl;
+        std::ofstream file(file_name, std::ios::app);
+        file << *cmd;
         file.close();
+
+        // TODO test
+        std::this_thread::sleep_for((std::chrono::seconds{1}));
     }
 };
