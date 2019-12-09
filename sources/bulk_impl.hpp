@@ -11,6 +11,7 @@
 
 #include "command.hpp"
 #include "printer.hpp"
+#include "counters.hpp"
 
 // ------------------------------------------------------------------
 class reader_observer {
@@ -30,6 +31,7 @@ public:
       if (current_command_) {
          out_command(current_command_);
       }
+      std::cout << mc_;
    }
 
    command_ptr create_command(const std::string& token) {
@@ -51,6 +53,7 @@ public:
             printer.lock()->print(cmd);
          }
       }
+      mc_.calc(cmd);
    }
 
    // reader_observer impl
@@ -66,6 +69,7 @@ public:
       } else {
          current_command_ = create_command(str);
       }
+      mc_.calc_line();
    }
 
 private:
@@ -74,6 +78,8 @@ private:
 
    using printers = std::list<pringer_wptr>; 
    printers printers_;
+
+   mutable main_counters mc_{"main thread"};
 };
 
 // ------------------------------------------------------------------

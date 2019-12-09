@@ -12,6 +12,7 @@
 #include <queue>
 
 #include "command.hpp"
+#include "counters.hpp"
 
 // ------------------------------------------------------------------
 class printer {
@@ -32,6 +33,8 @@ class console_printer : public printer {
     std::thread worker_;
 
     void do_print() {
+        worker_counters wc("console printer");
+        
         while (!stop_) {
             // std::cout << "start wait\n";
 
@@ -53,19 +56,24 @@ class console_printer : public printer {
             cmd_queue_.pop();
             u_lock.unlock();
             std::cout << *cmd;
+
+            wc.calc(cmd);
+
         } // while
 
         std::lock_guard<std::mutex> lock(mutex_);
         while (!cmd_queue_.empty()) {
-
             std::cout << "queue is not empty yet\n";
             
             const auto cmd = cmd_queue_.front();
             cmd_queue_.pop();
             std::cout << *cmd;
+
+            wc.calc(cmd);
         }
         
         // std::cout << "work thread " << std::this_thread::get_id() << " is stopped\n";
+        std::cout << wc;
     }
 public:
     console_printer() {

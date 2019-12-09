@@ -8,6 +8,7 @@
 
 // ------------------------------------------------------------------
 class command {
+   friend class worker_counters;
    friend std::ostream& operator << (std::ostream&, const command&);
 
 public:   
