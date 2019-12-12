@@ -16,7 +16,7 @@ class worker_counters {
 public:
     worker_counters(const std::string& thread_name) : thread_name_(thread_name) {}
 
-    void calc(const command_ptr& cmd) {
+    void count(const command_ptr& cmd) {
         ++blocks_;
         commands_ += cmd->sub_commands_.size();
     }
@@ -38,11 +38,11 @@ class main_counters {
 public:
     main_counters(const std::string& thread_name) : wc_(thread_name) {}
 
-    void calc(const command_ptr& cmd) {
-        wc_.calc(cmd);
+    void count(const command_ptr& cmd) {
+        wc_.count(cmd);
     }
 
-    void calc_line() {
+    void count_line() {
         ++lines_count_;
     }
 };

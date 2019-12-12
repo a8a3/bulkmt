@@ -53,7 +53,7 @@ public:
             printer.lock()->print(cmd);
          }
       }
-      mc_.calc(cmd);
+      mc_.count(cmd);
    }
 
    // reader_observer impl
@@ -69,14 +69,14 @@ public:
       } else {
          current_command_ = create_command(str);
       }
-      mc_.calc_line();
+      mc_.count_line();
    }
 
 private:
    command_ptr current_command_;
    const size_t bulk_size_;
 
-   using printers = std::list<pringer_wptr>; 
+   using printers = std::list<printer_wptr>;
    printers printers_;
 
    mutable main_counters mc_{"main thread"};
