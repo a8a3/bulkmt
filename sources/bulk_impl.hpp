@@ -10,6 +10,8 @@
 #include <chrono>
 
 #include "command.hpp"
+#include "printer.hpp"
+#include "counters.hpp"
 
 // ------------------------------------------------------------------
 class reader_observer {
@@ -20,18 +22,16 @@ public:
 using reader_observer_sptr = std::shared_ptr<reader_observer>;
 using reader_observer_wptr = std::weak_ptr<reader_observer>;
 
-
 // ------------------------------------------------------------------
 class bulk_commands : public reader_observer {
 
-public:
-   using printer = std::function<void(const command_ptr&)>;
-   
+public:   
    bulk_commands(size_t bulk_size) : bulk_size_(bulk_size) {}
   ~bulk_commands() {
       if (current_command_) {
          out_command(current_command_);
       }
+      std::cout << mc_;
    }
 
    command_ptr create_command(const std::string& token) {
@@ -43,14 +43,17 @@ public:
       return fixed_size_cmd;
    }
 
-   void add_printer(const printer& prn) {
+   void add_printer(const printer_sptr& prn) {
       printers_.push_back(prn);
    }
 
    void out_command(const command_ptr& cmd) const {
       for(const auto& printer: printers_) {
-         printer(cmd);
+         if (!printer.expired()) {
+            printer.lock()->print(cmd);
+         }
       }
+      mc_.count(cmd);
    }
 
    // reader_observer impl
@@ -60,20 +63,23 @@ public:
 
          if(current_command_->is_full()) {
             out_command(current_command_);
-            current_command_.release();
+            current_command_ = nullptr;
          } 
 
       } else {
          current_command_ = create_command(str);
       }
+      mc_.count_line();
    }
 
 private:
    command_ptr current_command_;
    const size_t bulk_size_;
 
-   using printers = std::list<printer>; 
+   using printers = std::list<printer_wptr>;
    printers printers_;
+
+   mutable main_counters mc_{"main thread"};
 };
 
 // ------------------------------------------------------------------
