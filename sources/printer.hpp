@@ -103,7 +103,7 @@ class file_printer : public printer {
    void write_to_file(const std::string& thread_name, const command_ptr& cmd) const {
 
 // TODO
-//    std::this_thread::sleep_for(std::chrono::milliseconds(2'000));
+      std::this_thread::sleep_for(std::chrono::milliseconds(2'000));
 
       const auto cmd_creation_time = std::chrono::duration_cast<std::chrono::microseconds>(cmd->get_creation_time_point().time_since_epoch());
       const auto file_name = "bulk_" + thread_name + "_"
@@ -128,7 +128,6 @@ class file_printer : public printer {
            const auto cmd = cmd_queue_.front();
            cmd_queue_.pop();
            u_lock.unlock();
-           cv_.notify_one();  // notify other thread
 
            write_to_file(thread_name, cmd);
            wc.count(cmd);
@@ -136,9 +135,7 @@ class file_printer : public printer {
 
         while (true) {
            std::unique_lock<std::mutex> lock(mutex_);
-           if (!lock.owns_lock()) {
-              lock.lock();
-           }
+
            if (cmd_queue_.empty()) {
               break;  // while
            }
@@ -177,6 +174,6 @@ public:
        std::unique_lock<std::mutex> u_lock(mutex_);
        cmd_queue_.push(cmd);
        u_lock.unlock();
-       cv_.notify_all();
+       cv_.notify_one();
    }
 };
