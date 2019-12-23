@@ -26,8 +26,8 @@ using reader_observer_wptr = std::weak_ptr<reader_observer>;
 class bulk_commands : public reader_observer {
 
 public:   
-   bulk_commands(size_t bulk_size) : bulk_size_(bulk_size) {}
-  ~bulk_commands() {
+   explicit bulk_commands(size_t bulk_size) : bulk_size_(bulk_size) {}
+  ~bulk_commands() override {
       if (current_command_) {
          out_command(current_command_);
       }

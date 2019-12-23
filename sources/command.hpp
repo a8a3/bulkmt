@@ -56,7 +56,7 @@ class fixed_size_command  : public command {
    const size_t command_size_;
 
 public:
-   fixed_size_command(size_t command_size) : command_size_(command_size) {
+   explicit fixed_size_command(size_t command_size) : command_size_(command_size) {
       sub_commands_.reserve(command_size_);
    }
 
